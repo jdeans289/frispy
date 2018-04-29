@@ -3,6 +3,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv.h>
+#include <geometry_msgs/Pose.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <vector>
@@ -32,7 +33,7 @@ void getDepth(const sensor_msgs::ImageConstPtr& msg) //int x, int y)
 
     for (int r = 0; r < rows; r++) {
     	for (int c = 0; c < 531; c++) {
-    		ROS_INFO("Depth at %d,%d: %d", r, c, cv_ptr->image.at<short int>(cv::Point(r,c)));
+    		ROS_INFO("Depth at %d,%d: %d", r, c, cv_ptr->image.at<int>(cv::Point(r,c)));
     	}
     }
 
@@ -44,7 +45,7 @@ int main (int argc, char** argv) {
 	ros::init(argc, argv, "depth");
 	ros::NodeHandle node;
 
-	ros::Subscriber depth_subscriber = node.subscribe("/nav_kinect/depth_registered/hw_registered/image_rect"
+	ros::Subscriber depth_subscriber = node.subscribe("/nav_kinect/depth_registered/image_raw"
 													, 100, getDepth);//boost::bind(getDepth, _1, argv[0], argv[1]));
 	for (int i = 0; i < 10; i++) {
 		ROS_INFO("%d", i);
