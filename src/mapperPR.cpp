@@ -2,6 +2,6 @@
 
 mapperPR::mapperPR(TFBroadcastPR& br) : _broadcaster(br) {}
 
-void mapperPR::recievePose(geometry_msgs::Pose &pose) {
-	_broadcaster.recievePose(pose);
+void mapperPR::receivePose(geometry_msgs::Pose &pose) {
+	_broadcaster.receivePose(pose);
 }

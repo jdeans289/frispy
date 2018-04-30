@@ -11,6 +11,6 @@ private:
 public:
 	mapperPR(TFBroadcastPR& br);
 
-	void recievePose(geometry_msgs::Pose &pose);
+	void receivePose(geometry_msgs::Pose &pose);
 	
 };
