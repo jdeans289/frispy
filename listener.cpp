@@ -14,9 +14,10 @@
 //namespace enc = sensor_msgs::image_encodings;
 void boxGhostCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
   for (int i = 0; i < msg->bounding_boxes.size(); i++){
-    ROS_INFO("name : %s  xmin: %d  ymin: %d", msg->bounding_boxes[i].Class.c_str(), msg->bounding_boxes[i].xmin, msg->bounding_boxes[i].ymin);
+	int xavg = (msg->bounding_boxes[i].xmin + msg->bounding_boxes[i].xmax) / 2;
+	int yavg = (msg->bounding_boxes[i].ymin + msg->bounding_boxes[i].ymax) / 2;
+    ROS_INFO("name : %s  xmin: %d  ymin: %d", msg->bounding_boxes[i].Class.c_str(), xavg, yavg);
   }
-  
 }
 
 int main (int argc, char** argv) {
