@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   image_transport
+  darknet_ros_msgs
   tf
 )
 
@@ -141,6 +142,7 @@ add_executable(depth_node
 src/depth_node.cpp
 src/TFBroadcastPR.cpp
 src/mapperPR.cpp
+src/FoundObject.cpp
 )
 
 
