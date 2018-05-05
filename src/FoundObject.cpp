@@ -5,7 +5,8 @@
 FoundObject::FoundObject(const int &xC, const int &yC, const float &zC)  : xCenter(xC), yCenter(yC), zCenter(zC) {};
 
 void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
-	cv_bridge::CvImagePtr cv_ptr;	
+  //ROS_INFO("IN GETDEPTH CALLBACK");
+	  cv_bridge::CvImagePtr cv_ptr;	
     try
     {
       cv_ptr = cv_bridge::toCvCopy(msg); // if no encoding specified, the cv image will have the same encoding as the ros msg
@@ -20,24 +21,66 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     //ROS_INFO("Cols: %d", cv_ptr->image.cols);
     // int rows = cv_ptr->image.rows;
     // int cols = cv_ptr->image.cols;
+    if (detected_box.Class != "bottle")
+        return;
 
+
+    const float THRESH = .3;      // difference threshold
+    const float FRACTION = .5; // fraction of bounding box for rectangle radius
+
+     // get width and height of rectangle
+    float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
+    float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
+
+
+
+     // get center of box
     xCenter = (detected_box.xmin + detected_box.xmax) / 2;
-  	yCenter = (detected_box.ymin + detected_box.ymax) / 2;
-  	zCenter = 0;
-  	float depthSum;
-  	int count = (detected_box.xmax - detected_box.xmin) * (detected_box.ymax - detected_box.ymin);
+    yCenter = (detected_box.ymin + detected_box.ymax) / 2;
 
+     // iterate over the mini-rectangle, computing average depth
+    float depthSum;
+    float depth;
+    // float area = rectWidth * rectHeight;
+    float numValidPoints = 0;
+
+    ROS_INFO("rectWidth: %f, rectHeight: %f", rectWidth, rectHeight);
+
+    for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
+      for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
+        depth = cv_ptr->image.at<float>(cv::Point(x,y));
+
+        // ignore nans and infinities
+        if (std::isfinite(depth)) {
+          ROS_INFO("finite depth: %f", depth);
+          depthSum += depth;
+          numValidPoints++;
+        }
+        // if (depth > zCenter) {
+        //     zCenter = depth;
+      }
+    }
+    zCenter = depthSum / numValidPoints;
+
+
+    // xCenter = (detected_box.xmin + detected_box.xmax) / 2;
+  	// yCenter = (detected_box.ymin + detected_box.ymax) / 2;
+  	// zCenter = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
+
+
+
+  	//double depthSum;
+  	//int count = (detected_box.xmax - detected_box.xmin) * (detected_box.ymax - detected_box.ymin);
 
   	// get max depth inside the bounding box
-    for (int x = detected_box.xmin; x < detected_box.xmax; x++) {
-    	for (int y = detected_box.ymin; y < detected_box.ymax; y++) {
-    		depthSum += cv_ptr->image.at<float>(cv::Point(x,y));
-    		//ROS_INFO("%d", depth);
-    		// if (depth > zCenter) {
-    		// 	zCenter = depth;
-    	}
-    }
-    zCenter = depthSum / count;
+    // for (int x = detected_box.xmin; x < detected_box.xmax; x++) {
+    // 	for (int y = detected_box.ymin; y < detected_box.ymax; y++) {
+    // 		depthSum += cv_ptr->image.at<double>(cv::Point(x,y));
+    // 		//ROS_INFO("%lf", cv_ptr->image.at<float>(cv::Point(x,y)));
+    // 		// if (depth > zCenter) {
+    // 		// 	zCenter = depth;
+    // 	}
+    // }
 
 	//zCenter = cv_ptr->image.at<int>(cv::Point(xCenter,yCenter));
 	ROS_INFO("Depth at %d,%d: %f", xCenter, yCenter, zCenter);
@@ -55,11 +98,13 @@ void FoundObject::getBox(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
   	//ROS_INFO("item name: %s", msg->bounding_boxes[i].Class);
   	// if it's a cup
     if (msg->bounding_boxes[i].Class == "bottle") {
+      ROS_INFO("Found the bottle!");
     	detected_box = msg->bounding_boxes[i];
+
     	break;
     }
   }
-  
+  //ROS_INFO ("IN GETBOX CALLBACK");
 
   return;
 }

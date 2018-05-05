@@ -4,6 +4,7 @@
 #include <visualization_msgs/Marker.h>
 #include <darknet_ros_msgs/BoundingBoxes.h>
 #include <darknet_ros_msgs/BoundingBox.h>
+#include <math.h>
 
 class FoundObject {
 private:
