@@ -41,11 +41,14 @@ int main (int argc, char** argv) {
 	ros::Subscriber depth_subscriber = node.subscribe("/nav_kinect/depth_registered/hw_registered/image_rect"
 													, 100, &FoundObject::getDepth, &detected_object);
                                                     //boost::bind(getDepth, _1, argv[0], argv[1]));
+    ros::Subscriber location_subscriber = node.subscribe("/nav_kinect/depth_registered/points"
+                                                    , 100, &FoundObject::getLocation, &detected_object);
 	
     ros::Publisher marker_pub = node.advertise<visualization_msgs::Marker>("detected_object", 1);
 
 
-    
+    ros::spinOnce();
+
     while (ros::ok()) {
 
         marker_pub.publish(detected_object.marker);

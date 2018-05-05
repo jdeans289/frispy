@@ -2,7 +2,27 @@
 
 
 
-FoundObject::FoundObject(const int &xC, const int &yC, const float &zC)  : xCenter(xC), yCenter(yC), zCenter(zC) {};
+FoundObject::FoundObject(const int &xC, const int &yC, const float &zC)  : xCenter(xC), yCenter(yC), zDepth(zC) {};
+
+
+
+
+void FoundObject::getBox(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
+
+  for (int i = 0; i < msg->bounding_boxes.size(); i++) {
+    //ROS_INFO("item name: %s", msg->bounding_boxes[i].Class);
+    // if it's a cup
+    if (msg->bounding_boxes[i].Class == "bottle") {
+      ROS_INFO("Found the bottle!");
+      detected_box = msg->bounding_boxes[i];
+
+      break;
+    }
+  }
+  return;
+}
+
+
 
 void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
   //ROS_INFO("IN GETDEPTH CALLBACK");
@@ -25,54 +45,58 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
         return;
 
 
-    const float THRESH = .3;      // difference threshold
-    const float FRACTION = .5; // fraction of bounding box for rectangle radius
-
-     // get width and height of rectangle
-    float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
-    float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
-
-
-
-     // get center of box
+    // get center of box
     xCenter = (detected_box.xmin + detected_box.xmax) / 2;
     yCenter = (detected_box.ymin + detected_box.ymax) / 2;
 
-     // iterate over the mini-rectangle, computing average depth
-    float depthSum;
-    float depth;
-    // float area = rectWidth * rectHeight;
-    float numValidPoints = 0;
 
-    ROS_INFO("rectWidth: %f, rectHeight: %f", rectWidth, rectHeight);
+    // *** CENTER DEPTH APPROACH ***
 
-    for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
-      for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
-        depth = cv_ptr->image.at<float>(cv::Point(x,y));
-
-        // ignore nans and infinities
-        if (std::isfinite(depth)) {
-          ROS_INFO("finite depth: %f", depth);
-          depthSum += depth;
-          numValidPoints++;
-        }
-        // if (depth > zCenter) {
-        //     zCenter = depth;
-      }
-    }
-    zCenter = depthSum / numValidPoints;
+    zDepth = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
 
 
-    // xCenter = (detected_box.xmin + detected_box.xmax) / 2;
-  	// yCenter = (detected_box.ymin + detected_box.ymax) / 2;
-  	// zCenter = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
+    // *** FRACTIONAL RECTANGLE APPROACH ***
 
 
+    // const float THRESH = .3;      // difference threshold
+    // const float FRACTION = .5; // fraction of bounding box for rectangle radius
+
+    //  // get width and height of rectangle
+    // float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
+    // float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
+
+
+    // iterate over the mini-rectangle, computing average depth
+    // float depthSum;
+    // float depth;
+    // // float area = rectWidth * rectHeight;
+    // float numValidPoints = 0;
+
+
+
+    // for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
+    //   for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
+    //     depth = cv_ptr->image.at<float>(cv::Point(x,y));
+
+    //     // ignore nans and infinities
+    //     if (std::isfinite(depth)) {
+    //       //ROS_INFO("finite depth: %f", depth);
+    //       depthSum += depth;
+    //       numValidPoints++;
+    //     }
+    //     // if (depth > zCenter) {
+    //     //     zCenter = depth;
+    //   }
+    // }
+    // zDepth = depthSum / numValidPoints;
 
   	//double depthSum;
   	//int count = (detected_box.xmax - detected_box.xmin) * (detected_box.ymax - detected_box.ymin);
 
-  	// get max depth inside the bounding box
+
+
+  	// *** MAX DEPTH APPROACH ***
+
     // for (int x = detected_box.xmin; x < detected_box.xmax; x++) {
     // 	for (int y = detected_box.ymin; y < detected_box.ymax; y++) {
     // 		depthSum += cv_ptr->image.at<double>(cv::Point(x,y));
@@ -82,41 +106,90 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     // 	}
     // }
 
-	//zCenter = cv_ptr->image.at<int>(cv::Point(xCenter,yCenter));
-	ROS_INFO("Depth at %d,%d: %f", xCenter, yCenter, zCenter);
+   ROS_INFO("xmax-xmin: %ld | ymax-ymin: %ld", detected_box.xmax - detected_box.xmin, detected_box.ymax - detected_box.ymin);
 
-	buildCube();
+	 ROS_INFO("Depth at %d,%d: %f", xCenter, yCenter, zDepth);
+   // ROS_INFO("getDepth time: %d", ros::Time::now());
    
   	return;
 }
 
 
 
-void FoundObject::getBox(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
+/* using the x y pixels from the FoundObject class, get the associated coordinates */
+void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
 
-  for (int i = 0; i < msg->bounding_boxes.size(); i++) {
-  	//ROS_INFO("item name: %s", msg->bounding_boxes[i].Class);
-  	// if it's a cup
-    if (msg->bounding_boxes[i].Class == "bottle") {
-      ROS_INFO("Found the bottle!");
-    	detected_box = msg->bounding_boxes[i];
+  // *** thank you to Saurav Argawal for this solution ***
 
-    	break;
-    }
-  }
-  //ROS_INFO ("IN GETBOX CALLBACK");
 
-  return;
-}
+  geometry_msgs::Point objectLocation;
+
+
+  ROS_INFO("xCenter (pixel): %d | yCenter (pixel): %d", xCenter, yCenter);
+  int pointIndex, xIndex, yIndex, zIndex; // indeces of x, y, and z coordinates
+  pointIndex = yCenter * msg.row_step + xCenter * msg.point_step;
+  xIndex = pointIndex;
+  yIndex = pointIndex + msg.fields[1].offset;
+  zIndex = pointIndex + msg.fields[2].offset;
+  ROS_INFO("height: %d", msg.height);
+  ROS_INFO("width: %d", msg.width);
+
+
+  float x, y, z;
+
+  memcpy(&x, &msg.data[xIndex], sizeof(float));
+  memcpy(&y, &msg.data[yIndex], sizeof(float));
+  memcpy(&z, &msg.data[zIndex], sizeof(float));
+
+
+
+  objectLocation.x = x;
+  objectLocation.y = y;
+  objectLocation.z = z;
+
+
+  ROS_INFO("32 bit XYZ: %f, %f, %f", x, y, z);
+  ROS_INFO("64 bit XYZ: %lf, %lf, %lf", objectLocation.x, objectLocation.y, objectLocation.z);
+
+  // transform our new point relative to odom
+
+
+  tf::TransformListener listener;
+  // tf::Stamped<tf::Point> original;
+  // tf::Stamped<tf::Point> final;
+  geometry_msgs::PointStamped ogLocation;
+  geometry_msgs::PointStamped finalLocation;
+
+  // pack our location into a tf::PointStamped
+  ogLocation.header.stamp = ros::Time::now();
+  ogLocation.header.frame_id = "/nav_kinect_rgb_optical_frame";
+  ogLocation.point = objectLocation;
+
+
+  try {
+  listener.waitForTransform("/nav_kinect_rgb_optical_frame", "odom", ros::Time(0), ros::Duration(4));
+  listener.transformPoint("/odom", ogLocation, finalLocation);
+  } catch (tf::TransformException ex) {}
+
+  ROS_INFO("transformed 64 bit XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
+
+  // the current problem is that the transformed coordinates (relative to odom) are all 0!!! How to fix???
+
+
+  buildCube();
+} 
+
+
+
+
+
+
 
 
 
 void FoundObject::buildCube() {
 
-
-
-
-	marker.header.frame_id = "nav_kinect_rgb_optical_frame";
+	marker.header.frame_id = "odom";
 	marker.header.stamp = ros::Time::now();
 
 	// Set the namespace and id for this marker.  This serves to create a unique ID
@@ -130,15 +203,15 @@ void FoundObject::buildCube() {
 	// TFBroadcastPR broadcaster("odom","camera_rgb_optical_frame");
 	// mapperPR mapper(broadcaster);
 
-	geometry_msgs::Pose pose;
-	pose.position.x = xCenter;
-	pose.position.y = yCenter;
-	pose.position.z = zCenter;
+	geometry_msgs::Pose finalPose;
 
-	pose.orientation.x = 0;
-	pose.orientation.y = 0;
-	pose.orientation.z = 0;
-	pose.orientation.w = 1;
+  // put the calculated point into the pose
+  finalPose.position = finalLocation.point;
+
+	finalPose.orientation.x = 0;
+	finalPose.orientation.y = 0;
+	finalPose.orientation.z = 0;
+	finalPose.orientation.w = 1;
 
 	// set scale
 	marker.scale.x = 1.0;
@@ -151,7 +224,7 @@ void FoundObject::buildCube() {
 	marker.color.b = 0.0f;
 	marker.color.a = 1.0;
 
-	marker.pose = pose;
+	marker.pose = finalPose;
 	marker.lifetime = ros::Duration();
 
 	return;

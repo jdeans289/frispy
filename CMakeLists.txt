@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   image_transport
   darknet_ros_msgs
+  geometry_msgs
   tf
 )
 
