@@ -52,48 +52,45 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
 
     // *** CENTER DEPTH APPROACH ***
 
-    zDepth = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
+    // zDepth = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
 
 
     // *** FRACTIONAL RECTANGLE APPROACH ***
 
 
-    // const float THRESH = .3;      // difference threshold
-    // const float FRACTION = .5; // fraction of bounding box for rectangle radius
+    const float THRESH = .3;      // difference threshold
+    const float FRACTION = .5; // fraction of bounding box for rectangle radius
 
-    //  // get width and height of rectangle
-    // float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
-    // float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
+     // get width and height of rectangle
+    float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
+    float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
 
 
     // iterate over the mini-rectangle, computing average depth
-    // float depthSum;
-    // float depth;
-    // // float area = rectWidth * rectHeight;
-    // float numValidPoints = 0;
+    float depthSum;
+    float depth;
+    // float area = rectWidth * rectHeight;
+    float numValidPoints = 0;
 
 
 
-    // for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
-    //   for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
-    //     depth = cv_ptr->image.at<float>(cv::Point(x,y));
+    for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
+      for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
+        depth = cv_ptr->image.at<float>(cv::Point(x,y));
 
-    //     // ignore nans and infinities
-    //     if (std::isfinite(depth)) {
-    //       //ROS_INFO("finite depth: %f", depth);
-    //       depthSum += depth;
-    //       numValidPoints++;
-    //     }
-    //     // if (depth > zCenter) {
-    //     //     zCenter = depth;
-    //   }
-    // }
-    // zDepth = depthSum / numValidPoints;
+        // ignore nans and infinities
+        if (std::isfinite(depth)) {
+          //ROS_INFO("finite depth: %f", depth);
+          depthSum += depth;
+          numValidPoints++;
+        }
+        // if (depth > zCenter) {
+        //     zCenter = depth;
+      }
+    }
+    zDepth = depthSum / numValidPoints;
 
-  	//double depthSum;
-  	//int count = (detected_box.xmax - detected_box.xmin) * (detected_box.ymax - detected_box.ymin);
-
-
+  	
 
   	// *** MAX DEPTH APPROACH ***
 
@@ -106,9 +103,9 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     // 	}
     // }
 
-   ROS_INFO("xmax-xmin: %ld | ymax-ymin: %ld", detected_box.xmax - detected_box.xmin, detected_box.ymax - detected_box.ymin);
+   //ROS_INFO("xmax-xmin: %ld | ymax-ymin: %ld", detected_box.xmax - detected_box.xmin, detected_box.ymax - detected_box.ymin);
 
-	 ROS_INFO("Depth at %d,%d: %f", xCenter, yCenter, zDepth);
+	 ROS_INFO("representative depth with center %d,%d: %f", xCenter, yCenter, zDepth);
    // ROS_INFO("getDepth time: %d", ros::Time::now());
    
   	return;
@@ -122,33 +119,31 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
   // *** thank you to Saurav Argawal for this solution ***
 
 
-  geometry_msgs::Point objectLocation;
-
-
   ROS_INFO("xCenter (pixel): %d | yCenter (pixel): %d", xCenter, yCenter);
   int pointIndex, xIndex, yIndex, zIndex; // indeces of x, y, and z coordinates
   pointIndex = yCenter * msg.row_step + xCenter * msg.point_step;
   xIndex = pointIndex;
-  yIndex = pointIndex + msg.fields[1].offset;
-  zIndex = pointIndex + msg.fields[2].offset;
-  ROS_INFO("height: %d", msg.height);
-  ROS_INFO("width: %d", msg.width);
+  yIndex = pointIndex + msg.fields[1].offset; 
+  // zIndex = pointIndex + msg.fields[2].offset; // dont need because we're using the depth image directly
 
 
-  float x, y, z;
+  //ROS_INFO("height: %d", msg.height);
+  //ROS_INFO("width: %d", msg.width);
+
+  float x, y; // z;
 
   memcpy(&x, &msg.data[xIndex], sizeof(float));
   memcpy(&y, &msg.data[yIndex], sizeof(float));
-  memcpy(&z, &msg.data[zIndex], sizeof(float));
+  //memcpy(&z, &msg.data[zIndex], sizeof(float));
 
-
+  geometry_msgs::Point objectLocation;
 
   objectLocation.x = x;
   objectLocation.y = y;
-  objectLocation.z = z;
+  objectLocation.z = zDepth;
 
 
-  ROS_INFO("32 bit XYZ: %f, %f, %f", x, y, z);
+  // ROS_INFO("32 bit XYZ: %f, %f, %f", x, y, z);
   ROS_INFO("64 bit XYZ: %lf, %lf, %lf", objectLocation.x, objectLocation.y, objectLocation.z);
 
   // transform our new point relative to odom
@@ -166,23 +161,23 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
   ogLocation.point = objectLocation;
 
 
+  tf::StampedTransform testTransform;
+
   try {
-  listener.waitForTransform("/nav_kinect_rgb_optical_frame", "odom", ros::Time(0), ros::Duration(4));
-  listener.transformPoint("/odom", ogLocation, finalLocation);
+    listener.waitForTransform("/odom", "/nav_kinect_rgb_optical_frame", ros::Time(0), ros::Duration(4));
+    listener.lookupTransform("/odom", "/nav_kinect_rgb_optical_frame", ros::Time(0), testTransform);
+    ROS_INFO("Test Transform XYZ: %lf, %lf, %lf", testTransform.getOrigin().getX(), testTransform.getOrigin().getY(), testTransform.getOrigin().getZ() );
+
+    listener.transformPoint("/odom", ogLocation, finalLocation);
   } catch (tf::TransformException ex) {}
 
-  ROS_INFO("transformed 64 bit XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
+  ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
 
   // the current problem is that the transformed coordinates (relative to odom) are all 0!!! How to fix???
 
 
   buildCube();
 } 
-
-
-
-
-
 
 
 

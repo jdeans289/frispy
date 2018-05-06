@@ -7,6 +7,7 @@
 #include <math.h>
 #include <geometry_msgs/PointStamped.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <tf/tf.h>
 #include <tf/transform_listener.h>
 
 class FoundObject {
