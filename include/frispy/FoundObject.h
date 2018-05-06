@@ -14,6 +14,9 @@ class FoundObject {
 private:
 	int xCenter, yCenter;
 	float zDepth;
+	float centerDepthSum, avgDepthSum;
+	float miniboxDepthSum[5];
+	int count;
 	darknet_ros_msgs::BoundingBox detected_box;
 	geometry_msgs::PointStamped finalLocation;
 

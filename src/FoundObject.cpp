@@ -2,7 +2,13 @@
 
 
 
-FoundObject::FoundObject(const int &xC, const int &yC, const float &zC)  : xCenter(xC), yCenter(yC), zDepth(zC) {};
+FoundObject::FoundObject(const int &xC, const int &yC, const float &zC) : xCenter(xC), yCenter(yC), zDepth(zC), count(0), centerDepthSum(0.0), avgDepthSum(0.0) {
+  miniboxDepthSum[0] = 0.0;
+  miniboxDepthSum[1] = 0.0;
+  miniboxDepthSum[2] = 0.0;
+  miniboxDepthSum[3] = 0.0;
+  miniboxDepthSum[4] = 0.0;
+};
 
 
 
@@ -44,56 +50,93 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     if (detected_box.Class != "bottle")
         return;
 
+    count++;
+    ROS_INFO("\n\nDetection %d:", count);
+  
 
     // get center of box
     xCenter = (detected_box.xmin + detected_box.xmax) / 2;
     yCenter = (detected_box.ymin + detected_box.ymax) / 2;
 
 
-    // *** CENTER DEPTH APPROACH ***
+    float currDepth = 0.0;
 
-    // zDepth = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
+
+    // *** CENTER DEPTH APPROACH ***
+    currDepth = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
+    centerDepthSum += currDepth;
+    // ROS_INFO("single-run: center approach: %f", currDepth);
+    
+    
+
+    // *** AVERAGE DEPTH APPROACH ***
+    float numValidPoints = 0.0;
+    float depthSum = 0.0;
+    float avgDepth = 0.0;
+    for (int x = detected_box.xmin; x < detected_box.xmax; x++) {
+     for (int y = detected_box.ymin; y < detected_box.ymax; y++) {
+          currDepth = cv_ptr->image.at<float>(cv::Point(x,y));
+          if (std::isfinite(currDepth)) {
+            // ROS_INFO("Depth at single point: %f", currDepth);
+            depthSum += currDepth;
+            numValidPoints++;
+        }
+     }
+    }
+    avgDepth = depthSum / numValidPoints;
+    avgDepthSum += avgDepth;
+    // ROS_INFO("single run: average approach: %f", avgDepth);
+    
+
+
+
+    ROS_INFO("inter-run avg: center approach: %f", (centerDepthSum/(float)count));
+    ROS_INFO("inter-run avg: average approach: %f", (avgDepthSum/(float)count));
 
 
     // *** FRACTIONAL RECTANGLE APPROACH ***
+    //const float THRESH = .3;      // difference threshold
+    float FRACTIONS[5] = {0.1, 0.3, 0.5, 0.7, 0.9}; // fraction of bounding box for rectangle radius
+
+    for (int ix = 0; ix < 5; ix ++) {
+
+      float FRACTION = FRACTIONS[ix]; // get the appropriate fraction to test
 
 
-    const float THRESH = .3;      // difference threshold
-    const float FRACTION = .5; // fraction of bounding box for rectangle radius
+       // get width and height of rectangle
+      float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
+      float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
 
-     // get width and height of rectangle
-    float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
-    float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
+      depthSum = 0;
+      numValidPoints = 0;
 
+      // iterate over the mini-rectangle, computing average depth
+      for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
+        for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
+          currDepth = cv_ptr->image.at<float>(cv::Point(x,y));
 
-    // iterate over the mini-rectangle, computing average depth
-    float depthSum;
-    float depth;
-    // float area = rectWidth * rectHeight;
-    float numValidPoints = 0;
-
-
-
-    for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
-      for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
-        depth = cv_ptr->image.at<float>(cv::Point(x,y));
-
-        // ignore nans and infinities
-        if (std::isfinite(depth)) {
-          //ROS_INFO("finite depth: %f", depth);
-          depthSum += depth;
-          numValidPoints++;
+          // ignore nans and infinities
+          if (std::isfinite(currDepth)) {
+            //ROS_INFO("finite depth: %f", depth);
+            depthSum += currDepth;
+            numValidPoints++;
+          }
         }
-        // if (depth > zCenter) {
-        //     zCenter = depth;
       }
-    }
-    zDepth = depthSum / numValidPoints;
+      zDepth = depthSum / numValidPoints;
+      miniboxDepthSum[ix] += zDepth;
+      //ROS_INFO("single-run: minibox approach, frac %f: %f", FRACTION, zDepth);
 
+      ROS_INFO("inter-run avg: minibox approach, frac %f: %f", FRACTION, miniboxDepthSum[ix]/(float)count);
+
+    }
+
+    // *** PRINT AVERAGE METRICS ***
+    
+    
   	
 
   	// *** MAX DEPTH APPROACH ***
-
     // for (int x = detected_box.xmin; x < detected_box.xmax; x++) {
     // 	for (int y = detected_box.ymin; y < detected_box.ymax; y++) {
     // 		depthSum += cv_ptr->image.at<double>(cv::Point(x,y));
