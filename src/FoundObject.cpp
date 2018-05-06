@@ -105,7 +105,7 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
 
    //ROS_INFO("xmax-xmin: %ld | ymax-ymin: %ld", detected_box.xmax - detected_box.xmin, detected_box.ymax - detected_box.ymin);
 
-	 ROS_INFO("representative depth with center %d,%d: %f", xCenter, yCenter, zDepth);
+	 //ROS_INFO("representative depth with center %d,%d: %f", xCenter, yCenter, zDepth);
    // ROS_INFO("getDepth time: %d", ros::Time::now());
    
   	return;
@@ -119,7 +119,7 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
   // *** thank you to Saurav Argawal for this solution ***
 
 
-  ROS_INFO("xCenter (pixel): %d | yCenter (pixel): %d", xCenter, yCenter);
+  //ROS_INFO("xCenter (pixel): %d | yCenter (pixel): %d", xCenter, yCenter);
   int pointIndex, xIndex, yIndex, zIndex; // indeces of x, y, and z coordinates
   pointIndex = yCenter * msg.row_step + xCenter * msg.point_step;
   xIndex = pointIndex;
@@ -144,7 +144,7 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
 
 
   // ROS_INFO("32 bit XYZ: %f, %f, %f", x, y, z);
-  ROS_INFO("64 bit XYZ: %lf, %lf, %lf", objectLocation.x, objectLocation.y, objectLocation.z);
+  
 
   // transform our new point relative to odom
 
@@ -153,25 +153,26 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
   // tf::Stamped<tf::Point> original;
   // tf::Stamped<tf::Point> final;
   geometry_msgs::PointStamped ogLocation;
-  geometry_msgs::PointStamped finalLocation;
 
   // pack our location into a tf::PointStamped
-  ogLocation.header.stamp = ros::Time::now();
+  ogLocation.header.stamp = ros::Time();
   ogLocation.header.frame_id = "/nav_kinect_rgb_optical_frame";
   ogLocation.point = objectLocation;
+  
 
 
   tf::StampedTransform testTransform;
 
   try {
     listener.waitForTransform("/odom", "/nav_kinect_rgb_optical_frame", ros::Time(0), ros::Duration(4));
-    listener.lookupTransform("/odom", "/nav_kinect_rgb_optical_frame", ros::Time(0), testTransform);
-    ROS_INFO("Test Transform XYZ: %lf, %lf, %lf", testTransform.getOrigin().getX(), testTransform.getOrigin().getY(), testTransform.getOrigin().getZ() );
+    //listener.lookupTransform("/odom", "/nav_kinect_rgb_optical_frame", ros::Time(0), testTransform);
+    //ROS_INFO("nav_kinect -> odom: %lf, %lf, %lf", testTransform.getOrigin().getX(), testTransform.getOrigin().getY(), testTransform.getOrigin().getZ() );
 
     listener.transformPoint("/odom", ogLocation, finalLocation);
+    // works until here
   } catch (tf::TransformException ex) {}
 
-  ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
+  //ROS_INFO("ogLocation XYZ: %lf, %lf, %lf", ogLocation.point.x, ogLocation.point.y, ogLocation.point.z);
 
   // the current problem is that the transformed coordinates (relative to odom) are all 0!!! How to fix???
 
@@ -184,8 +185,8 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
 
 void FoundObject::buildCube() {
 
-	marker.header.frame_id = "odom";
-	marker.header.stamp = ros::Time::now();
+	marker.header.frame_id = "/odom";
+	marker.header.stamp = ros::Time();
 
 	// Set the namespace and id for this marker.  This serves to create a unique ID
 	// Any marker sent with the same namespace and id will overwrite the old one
@@ -194,11 +195,32 @@ void FoundObject::buildCube() {
 	marker.type = visualization_msgs::Marker::CUBE;
 	marker.action = visualization_msgs::Marker::ADD;
 
+  // set scale
+  marker.scale.x = 0.5;
+  marker.scale.y = 0.5;
+  marker.scale.z = 0.5;
+
+  // set color
+  marker.color.r = 0.0f;
+  marker.color.g = 1.0f;
+  marker.color.b = 0.0f;
+  marker.color.a = 1.0;
+
 
 	// TFBroadcastPR broadcaster("odom","camera_rgb_optical_frame");
 	// mapperPR mapper(broadcaster);
 
 	geometry_msgs::Pose finalPose;
+
+  
+  // hard code the point for now
+  //geometry_msgs::Point hardPoint;
+  // hardPoint.x = 1.0;
+  // hardPoint.y = 1.0;
+  // hardPoint.z = 1.0;
+
+  ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
+
 
   // put the calculated point into the pose
   finalPose.position = finalLocation.point;
@@ -208,16 +230,7 @@ void FoundObject::buildCube() {
 	finalPose.orientation.z = 0;
 	finalPose.orientation.w = 1;
 
-	// set scale
-	marker.scale.x = 1.0;
-	marker.scale.y = 1.0;
-	marker.scale.z = 1.0;
 
-	// set color
-	marker.color.r = 0.0f;
-	marker.color.g = 1.0f;
-	marker.color.b = 0.0f;
-	marker.color.a = 1.0;
 
 	marker.pose = finalPose;
 	marker.lifetime = ros::Duration();
