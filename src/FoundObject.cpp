@@ -39,20 +39,13 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
 
     //ROS_INFO("Rows: %d", cv_ptr->image.rows);
     //ROS_INFO("Cols: %d", cv_ptr->image.cols);
-    // int rows = cv_ptr->image.rows;
-    // int cols = cv_ptr->image.cols;
+
     if (detected_box.Class != "bottle")
         return;
-
 
     // get center of box
     xCenter = (detected_box.xmin + detected_box.xmax) / 2;
     yCenter = (detected_box.ymin + detected_box.ymax) / 2;
-
-
-    // *** CENTER DEPTH APPROACH ***
-
-    // zDepth = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
 
 
     // *** FRACTIONAL RECTANGLE APPROACH ***
@@ -65,15 +58,11 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
     float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
 
-
-    // iterate over the mini-rectangle, computing average depth
     float depthSum;
     float depth;
-    // float area = rectWidth * rectHeight;
     float numValidPoints = 0;
 
-
-
+    // iterate over the mini-rectangle, computing average depth
     for (int x = xCenter - rectWidth/2; x < xCenter + rectWidth/2; x++) {
       for (int y = yCenter - rectHeight/2; y < yCenter + rectHeight/2; y++) {
         depth = cv_ptr->image.at<float>(cv::Point(x,y));
@@ -84,25 +73,11 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
           depthSum += depth;
           numValidPoints++;
         }
-        // if (depth > zCenter) {
-        //     zCenter = depth;
       }
     }
     zDepth = depthSum / numValidPoints;
 
   	
-
-  	// *** MAX DEPTH APPROACH ***
-
-    // for (int x = detected_box.xmin; x < detected_box.xmax; x++) {
-    // 	for (int y = detected_box.ymin; y < detected_box.ymax; y++) {
-    // 		depthSum += cv_ptr->image.at<double>(cv::Point(x,y));
-    // 		//ROS_INFO("%lf", cv_ptr->image.at<float>(cv::Point(x,y)));
-    // 		// if (depth > zCenter) {
-    // 		// 	zCenter = depth;
-    // 	}
-    // }
-
    //ROS_INFO("xmax-xmin: %ld | ymax-ymin: %ld", detected_box.xmax - detected_box.xmin, detected_box.ymax - detected_box.ymin);
 
 	 //ROS_INFO("representative depth with center %d,%d: %f", xCenter, yCenter, zDepth);
