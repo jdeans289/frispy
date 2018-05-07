@@ -12,13 +12,12 @@ class mapper
 private:
 	TFBroadcastPR _broadcaster;
 	std::unordered_map<std::string, std::vector<geometry_msgs::Pose>> _foundObjects;
+	float distanceBetween(geometry_msgs::Point p1, geometry_msgs::Point p2);
 
 public:
 	mapper(TFBroadcastPR &br);
 
 	void storeObject(const frispy::object &object);
-
-	// void addObject(geometry_msgs::Pose pose);
 
 	void broadcastAllObjects();
 

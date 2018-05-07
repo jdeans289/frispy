@@ -6,6 +6,5 @@ void TFBroadcastPR::receivePose(geometry_msgs::Pose &pose) {
 	tf::Vector3 position(pose.position.x, pose.position.y, pose.position.z);
 	tf::Quaternion orientation(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
 	tf::Transform t(orientation, position);
-	
 	br.sendTransform(tf::StampedTransform(t, ros::Time::now(), fromFrame, toFrame));
 }
