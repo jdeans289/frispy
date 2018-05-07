@@ -2,30 +2,52 @@
 
 
 
-FoundObject::FoundObject(const int &xC, const int &yC, const float &zC)  : xCenter(xC), yCenter(yC), zDepth(zC) {};
+
+FoundObject::FoundObject(const int &xC, const int &yC, const float &zC, ros::Publisher &pub)  : xCenter(xC), yCenter(yC), zDepth(zC), object_pub(pub) {};
 
 
 
 
-void FoundObject::getBox(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
+void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
+
+  // grab single messages for the depth image and the point cloud
+  const sensor_msgs::PointCloud2ConstPtr& pointCloudMsg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/nav_kinect/depth_registered/points", ros::Duration(5)); 
+
+  const sensor_msgs::ImageConstPtr& depthImageMsg = ros::topic::waitForMessage<sensor_msgs::Image>("/nav_kinect/depth_registered/hw_registered/image_rect", 
+                                                                              ros::Duration(5));
+
 
   for (int i = 0; i < msg->bounding_boxes.size(); i++) {
-    //ROS_INFO("item name: %s", msg->bounding_boxes[i].Class);
+
+    std::string thisClass = msg->bounding_boxes[i].Class;
+    //ROS_INFO("detected: %s", thisClass.c_str());
     // if it's a cup
-    if (msg->bounding_boxes[i].Class == "bottle") {
-      ROS_INFO("Found the bottle!");
+    if (msg->bounding_boxes[i].probability > 0.5) {
+      
       detected_box = msg->bounding_boxes[i];
 
-      break;
+      // process away!
+      getDepth(depthImageMsg);
+      getLocation(pointCloudMsg);
+      //buildCube();
+
+      // populate our custom object with detectedObject class and location.
+      thisObject.Class = thisClass;
+      thisObject.location = finalLocation;
+
+
+      ROS_INFO("Object class: %s\nObject XYZ: %f %f %f\n", thisObject.Class.c_str(), thisObject.location.point.x, thisObject.location.point.y, thisObject.location.point.z);
+      object_pub.publish(thisObject);
     }
   }
+
   return;
 }
 
 
 
 void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
-  //ROS_INFO("IN GETDEPTH CALLBACK");
+    //ROS_INFO("IN GETDEPTH");
 	  cv_bridge::CvImagePtr cv_ptr;	
     try
     {
@@ -40,8 +62,8 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     //ROS_INFO("Rows: %d", cv_ptr->image.rows);
     //ROS_INFO("Cols: %d", cv_ptr->image.cols);
 
-    if (detected_box.Class != "bottle")
-        return;
+    //if (detected_box.Class != "bottle")
+      //  return;
 
     // get center of box
     xCenter = (detected_box.xmin + detected_box.xmax) / 2;
@@ -89,16 +111,16 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
 
 
 /* using the x y pixels from the FoundObject class, get the associated coordinates */
-void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
-
+void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
+  //ROS_INFO("IN GETLOCATION");
   // *** thank you to Saurav Argawal for this solution ***
 
 
   //ROS_INFO("xCenter (pixel): %d | yCenter (pixel): %d", xCenter, yCenter);
   int pointIndex, xIndex, yIndex, zIndex; // indeces of x, y, and z coordinates
-  pointIndex = yCenter * msg.row_step + xCenter * msg.point_step;
+  pointIndex = yCenter * msg->row_step + xCenter * msg->point_step;
   xIndex = pointIndex;
-  yIndex = pointIndex + msg.fields[1].offset; 
+  yIndex = pointIndex + msg->fields[1].offset; 
   // zIndex = pointIndex + msg.fields[2].offset; // dont need because we're using the depth image directly
 
 
@@ -107,8 +129,8 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
 
   float x, y; // z;
 
-  memcpy(&x, &msg.data[xIndex], sizeof(float));
-  memcpy(&y, &msg.data[yIndex], sizeof(float));
+  memcpy(&x, &msg->data[xIndex], sizeof(float));
+  memcpy(&y, &msg->data[yIndex], sizeof(float));
   //memcpy(&z, &msg.data[zIndex], sizeof(float));
 
   geometry_msgs::Point objectLocation;
@@ -152,12 +174,14 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
   // the current problem is that the transformed coordinates (relative to odom) are all 0!!! How to fix???
 
 
-  buildCube();
+  return;
 } 
 
 
 
+// *** OLD BUILD CUBE METHOD, FOR VISUALIZATION PURPOSES
 
+/*
 void FoundObject::buildCube() {
 
 	marker.header.frame_id = "/odom";
@@ -171,9 +195,9 @@ void FoundObject::buildCube() {
 	marker.action = visualization_msgs::Marker::ADD;
 
   // set scale
-  marker.scale.x = 0.5;
-  marker.scale.y = 0.5;
-  marker.scale.z = 0.5;
+  marker.scale.x = 0.2;
+  marker.scale.y = 0.2;
+  marker.scale.z = 0.2;
 
   // set color
   marker.color.r = 0.0f;
@@ -212,3 +236,5 @@ void FoundObject::buildCube() {
 
 	return;
 }
+
+*/ 

@@ -1,0 +1,2 @@
+string Class
+geometry_msgs/PointStamped location

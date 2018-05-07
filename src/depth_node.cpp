@@ -34,26 +34,26 @@ int main (int argc, char** argv) {
 	ros::NodeHandle node;
     ros::Rate r(1);
 
-    FoundObject detected_object(0, 0, 0);
+    ros::Publisher object_pub = node.advertise<frispy::object>("detected_object", 100);
+    FoundObject detected_object(0, 0, 0, object_pub);
 
 
-    ros::Subscriber boxes_subscriber = node.subscribe("/darknet_ros/bounding_boxes", 100, &FoundObject::getBox, &detected_object);
-	ros::Subscriber depth_subscriber = node.subscribe("/nav_kinect/depth_registered/hw_registered/image_rect"
-													, 100, &FoundObject::getDepth, &detected_object);
+    ros::Subscriber boxes_subscriber = node.subscribe("/darknet_ros/bounding_boxes", 100, &FoundObject::processBoxes, &detected_object);
+	//ros::Subscriber depth_subscriber = node.subscribe("/nav_kinect/depth_registered/hw_registered/image_rect"
+													//, 100, &FoundObject::getDepth, &detected_object);
                                                     //boost::bind(getDepth, _1, argv[0], argv[1]));
-    ros::Subscriber location_subscriber = node.subscribe("/nav_kinect/depth_registered/points"
-                                                    , 100, &FoundObject::getLocation, &detected_object);
+    //ros::Subscriber location_subscriber = node.subscribe("/nav_kinect/depth_registered/points"
+                                                    //, 100, &FoundObject::getLocation, &detected_object);
 	
-    ros::Publisher marker_pub = node.advertise<visualization_msgs::Marker>("detected_object", 1);
+    
 
-
-    ros::spinOnce();
 
     while (ros::ok()) {
 
-        marker_pub.publish(detected_object.marker);
+        ros::spinOnce();  
 
-        ros::spinOnce();  // calling spinOnce here prevents the cube from being published!
+        // ROS_INFO("Object class: %s\nObject XYZ: %f %f %f\n", detected_object.thisObject.Class.c_str(), detected_object.thisObject.location.point.x, detected_object.thisObject.location.point.y, detected_object.thisObject.location.point.z);
+        // object_pub.publish(detected_object.thisObject);
 
         r.sleep();
 
