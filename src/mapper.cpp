@@ -15,8 +15,7 @@ void mapper::storeObject(const frispy::object &object) {
 	if(_foundObjects.find(object.Class) != _foundObjects.end()) {
 		previouslyFound = &_foundObjects.find(object.Class)->second;
 		ROS_INFO("Already have %s", object.Class.c_str());		
-		for(auto pose : *previouslyFound) {
-			// ROS_INFO("Distance is %f", distanceBetween(pose.position, object.location.pose.position));		
+		for(auto pose : *previouslyFound) {	
 			if(distanceBetween(pose.position, object.location.pose.position) < .1) {
 				return;
 			}
@@ -49,7 +48,7 @@ void mapper::broadcastSelectedObjects(std::vector<std::string> &objects) {
 				_broadcaster.receivePose(location);
 		}
 		else {
-			// ROS_INFO("No " + objectType + "s have been found.");
+			ROS_INFO("No %ss have been found.", objectType);
 		}
 	}
 }
