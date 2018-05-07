@@ -28,9 +28,9 @@ public:
 
 	void getLocation(const sensor_msgs::PointCloud2ConstPtr& msg);
 
-	void getDimensions(const sensor_msgs::PointCloud2ConstPtr& msg);
+	//void getDimensions(const sensor_msgs::PointCloud2ConstPtr& msg);
 
-	void buildCube();
+	//void buildCube();
 
 	int getPointCloudXCoordinate(const sensor_msgs::PointCloud2ConstPtr& msg, int x, int y);
 

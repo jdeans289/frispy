@@ -10,6 +10,7 @@ float mapper::distanceBetween(geometry_msgs::Point p1, geometry_msgs::Point p2) 
 }
 //Recieves pose and object class string
 void mapper::storeObject(const frispy::object &object) {
+<<<<<<< HEAD
 	std::vector<geometry_msgs::Pose> *previouslyFound;
 	
 	if(_foundObjects.find(object.Class) != _foundObjects.end()) {
@@ -30,6 +31,11 @@ void mapper::storeObject(const frispy::object &object) {
 
 	}
 	ROS_INFO("Stored %s", object.Class.c_str());
+=======
+	 std::vector<geometry_msgs::Pose> newList();
+	 newList.push_back(object.location);
+	_foundObjects.insert(object.Class, newList);
+>>>>>>> 56d2c76a9fb9f5d651d74c0a595e236cd35c3e3e
 }
 
 void mapper::broadcastAllObjects() {
