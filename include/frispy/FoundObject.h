@@ -18,8 +18,8 @@ private:
 	float zDepth;
 	darknet_ros_msgs::BoundingBox detected_box;
 	geometry_msgs::PointStamped finalLocation;
-
-
+	ros::Publisher object_pub;
+	frispy::object thisObject; //TODO maybe make this a local variable
 
 public:
 	FoundObject(const int &xC, const int &yC, const float &zC, ros::Publisher &pub);
@@ -31,8 +31,4 @@ public:
 	void getLocation(const sensor_msgs::PointCloud2ConstPtr& msg);
 
 	void buildCube();
-
-	frispy::object thisObject;
-
-	ros::Publisher object_pub;
 };
