@@ -1,12 +1,12 @@
 #include "frispy/mapper.h"
 
-mapper::mapper(TFBroadcastPR &br) : _broadcaster(br) {}
+mapper::mapper(TFBroadcastPR &br) : _broadcaster(br), _foundObjects() {}
 
 //Recieves pose and object class string
-void mapper::receivePose(const geometry_msgs::Pose &pose) {
-	_foundObjects;
-	//broadcasts the pose
-	// _broadcaster.receivePose(pose);
+void mapper::storeObject(const frispy::object &object) {
+	 std::vector<geometry_msgs::Pose> newList();
+	 newList.push_back(object.location);
+	_foundObjects.insert({object.Class, newList);
 }
 
 void mapper::broadcastAllObjects() {

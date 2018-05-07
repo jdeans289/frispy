@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <geometry_msgs/Pose.h>
+#include <frispy/object.h>
 
 class mapper
 {
@@ -15,7 +16,7 @@ private:
 public:
 	mapper(TFBroadcastPR &br);
 
-	void receivePose(const geometry_msgs::Pose &pose);
+	void storeObject(const frispy::object &object);
 
 	// void addObject(geometry_msgs::Pose pose);
 

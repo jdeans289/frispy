@@ -8,5 +8,5 @@ int main(int argc, char** argv) {
 
     TFBroadcastPR br("odom", "odom");
     mapper m(br);
-    ros::Subscriber map_reader = node.subscribe("depth/detected_object", 100, &mapper::receivePose, &m);
+    ros::Subscriber map_reader = node.subscribe("depth/detected_object", 100, &mapper::storeObject, &m);
 }
