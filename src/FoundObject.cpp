@@ -36,6 +36,8 @@ void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& 
       thisObject.Class = thisClass;
       thisObject.location.pose.position = finalLocation.point;
       thisObject.location.header.frame_id = "/odom";
+      thisObject.height = 0.1;
+      thisObject.width = 0.1;
 
       if (!std::isnan(thisObject.location.pose.position.x))
         object_pub.publish(thisObject);
