@@ -1,6 +1,6 @@
 #include "frispy/mapper.h"
 
-mapper::mapper(TFBroadcastPR &br) : _broadcaster(br), _foundObjects() {}
+mapper::mapper(ros::Publisher &opub, ros::Publisher &mpub) : _object_pub(opub), _marker_pub(mpub), _foundObjects() {}
 
 float mapper::distanceBetween(geometry_msgs::Point p1, geometry_msgs::Point p2) {
 	auto diffX = p2.x - p1.x;
@@ -36,7 +36,11 @@ void mapper::broadcastAllObjects() {
 	for(auto& object : _foundObjects) {
 		//broadcasts the pose of every object in _foundObjects
 		for(auto &location : object.second) {
-			_broadcaster.receivePose(location);
+			frispy::object thisObject;
+			thisObject.location.pose = location;
+			thisObject.Class = object.first;
+			_object_pub.publish(thisObject);
+			//_broadcaster.receivePose(location);
 		}
 	}
 }
@@ -45,14 +49,19 @@ void mapper::broadcastSelectedObjects(std::vector<std::string> &objects) {
 	for(auto &objectType : objects) {
 		auto match = _foundObjects.find(objectType);
 		if(match != _foundObjects.end()) {
-			for(auto &location : match->second)
-				_broadcaster.receivePose(location);
+			for(auto &location : match->second) {
+				frispy::object thisObject;
+				thisObject.location.pose = location;
+				thisObject.Class = match->first;
+				_object_pub.publish(thisObject);
+			}
 		}
 		else {
 			// ROS_INFO("No " + objectType + "s have been found.");
 		}
 	}
 }
+
 
 /*
 //Recieves pose and object class string

@@ -20,7 +20,7 @@ int main (int argc, char** argv) {
     ros::Rate r(1);
 
     // we will publish on the detected_object topic
-    ros::Publisher object_pub = node.advertise<frispy::object>("detected_object", 100);
+    ros::Publisher object_pub = node.advertise<frispy::object>("all_detected_objects", 100);
     FoundObject detected_object(0, 0, 0, object_pub);
 
     ros::Subscriber boxes_subscriber = node.subscribe("/darknet_ros/bounding_boxes", 100, &FoundObject::processBoxes, &detected_object);
