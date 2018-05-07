@@ -148,6 +148,7 @@ add_executable( filter_listener
   src/filter_node.cpp
   src/mapper.cpp
   src/TFBroadcastPR.cpp
+
 )
 
 
@@ -171,7 +172,7 @@ target_link_libraries( filter_listener
     ${OpenCV_LIBS}
     ${catkin_LIBRARIES}
 
-) 
+)
 #############
 ## Install ##
 #############
