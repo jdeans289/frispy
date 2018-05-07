@@ -7,7 +7,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <vector>
 #include <frispy/TFBroadcastPR.h>
-#include <frispy/mapperPR.h>
 #include <frispy/FoundObject.h>
 #include <visualization_msgs/Marker.h>
 #include <darknet_ros_msgs/BoundingBoxes.h>

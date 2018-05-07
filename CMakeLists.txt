@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(frispy)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -148,11 +148,16 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(depth_node 
-src/depth_node.cpp
-src/TFBroadcastPR.cpp
-src/mapperPR.cpp
-src/FoundObject.cpp
+add_executable( depth_node 
+  src/depth_node.cpp
+  src/FoundObject.cpp
+)
+
+add_executable( filter_listener 
+  src/filter_node.cpp
+  src/mapper.cpp
+  src/TFBroadcastPR.cpp
+
 )
 
 
@@ -177,8 +182,13 @@ src/FoundObject.cpp
 target_link_libraries( depth_node
     ${OpenCV_LIBS}
     ${catkin_LIBRARIES}
-    ) 
+)
 
+target_link_libraries( filter_listener
+    ${OpenCV_LIBS}
+    ${catkin_LIBRARIES}
+
+)
 #############
 ## Install ##
 #############

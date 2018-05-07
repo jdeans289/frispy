@@ -80,6 +80,7 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     float rectWidth = (detected_box.xmax - detected_box.xmin) * FRACTION;
     float rectHeight = (detected_box.ymax - detected_box.ymin) * FRACTION;
 
+
     float depthSum;
     float depth;
     float numValidPoints = 0;
@@ -99,7 +100,6 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     }
     zDepth = depthSum / numValidPoints;
 
-  	
    //ROS_INFO("xmax-xmin: %ld | ymax-ymin: %ld", detected_box.xmax - detected_box.xmin, detected_box.ymax - detected_box.ymin);
 
 	 //ROS_INFO("representative depth with center %d,%d: %f", xCenter, yCenter, zDepth);
@@ -141,7 +141,6 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
 
 
   // ROS_INFO("32 bit XYZ: %f, %f, %f", x, y, z);
-  
 
   // transform our new point relative to odom
 
@@ -155,13 +154,13 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
   ogLocation.header.stamp = ros::Time();
   ogLocation.header.frame_id = "/nav_kinect_rgb_optical_frame";
   ogLocation.point = objectLocation;
-  
 
 
   tf::StampedTransform testTransform;
 
   try {
     listener.waitForTransform("/odom", "/nav_kinect_rgb_optical_frame", ros::Time(0), ros::Duration(4));
+
     //listener.lookupTransform("/odom", "/nav_kinect_rgb_optical_frame", ros::Time(0), testTransform);
     //ROS_INFO("nav_kinect -> odom: %lf, %lf, %lf", testTransform.getOrigin().getX(), testTransform.getOrigin().getY(), testTransform.getOrigin().getZ() );
 
@@ -183,7 +182,6 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
 
 /*
 void FoundObject::buildCube() {
-
 	marker.header.frame_id = "/odom";
 	marker.header.stamp = ros::Time();
 
@@ -193,6 +191,7 @@ void FoundObject::buildCube() {
 	marker.id = 0;
 	marker.type = visualization_msgs::Marker::CUBE;
 	marker.action = visualization_msgs::Marker::ADD;
+
 
   // set scale
   marker.scale.x = 0.2;
@@ -204,7 +203,6 @@ void FoundObject::buildCube() {
   marker.color.g = 1.0f;
   marker.color.b = 0.0f;
   marker.color.a = 1.0;
-
 
 	// TFBroadcastPR broadcaster("odom","camera_rgb_optical_frame");
 	// mapperPR mapper(broadcaster);
@@ -228,9 +226,7 @@ void FoundObject::buildCube() {
 	finalPose.orientation.y = 0;
 	finalPose.orientation.z = 0;
 	finalPose.orientation.w = 1;
-
-
-
+  
 	marker.pose = finalPose;
 	marker.lifetime = ros::Duration();
 
