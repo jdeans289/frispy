@@ -29,15 +29,21 @@ void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& 
       // process away!
       getDepth(depthImageMsg);
       getLocation(pointCloudMsg);
+      getDimensions(pointCloudMsg);
       //buildCube();
 
       // populate our custom object with detectedObject class and location.
       thisObject.Class = thisClass;
-      thisObject.location = finalLocation;
+      thisObject.location.pose.position = finalLocation.point;
+      thisObject.location.header.frame_id = "/odom";
 
-
-      ROS_INFO("Object class: %s\nObject XYZ: %f %f %f\n", thisObject.Class.c_str(), thisObject.location.point.x, thisObject.location.point.y, thisObject.location.point.z);
-      object_pub.publish(thisObject);
+      if (!std::isnan(thisObject.location.pose.position.x))
+        object_pub.publish(thisObject);
+        
+      //if (!(std::isnan(thisObject.location.point.x)) && !(std::isnan(thisObject.location.point.y)) && !(std::isnan(thisObject.location.point.z))) {}
+       // ROS_INFO("Object class: %s\nObject XYZ: %lf %lf %lf\n", thisObject.Class.c_str(), thisObject.location.point.x, thisObject.location.point.y, thisObject.location.point.z);
+        
+      //}
     }
   }
 
@@ -47,7 +53,7 @@ void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& 
 
 
 void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
-    //ROS_INFO("IN GETDEPTH");
+    //ROS_INFO("IN GETDEPTH")
 	  cv_bridge::CvImagePtr cv_ptr;	
     try
     {
@@ -108,20 +114,43 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
   	return;
 }
 
-
-
 /* using the x y pixels from the FoundObject class, get the associated coordinates */
 void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
   //ROS_INFO("IN GETLOCATION");
   // *** thank you to Saurav Argawal for this solution ***
 
+  // ROS_INFO("Yolo bounding boxes\nXmin: %d\tXmax:%d\nYmin: %d\tYmax:%d\n", detected_box.xmin, detected_box.xmax, detected_box.ymin, detected_box.ymax);
+  // int yMaxIndex = getPointCloudYCoordinate(msg, xCenter, detected_box.ymax);
+  // int yMinIndex = getPointCloudYCoordinate(msg, xCenter, detected_box.ymin);
+  // int xMaxIndex = getPointCloudXCoordinate(msg, detected_box.xmax, yCenter);
+  // int xMinIndex = getPointCloudXCoordinate(msg, detected_box.xmin, yCenter);
+  // ROS_INFO("Point Cloud boundaries boxes\nXmin: %d\tXmax:%d\nYmin: %d\tYmax:%d\n", xMinIndex, xMaxIndex, yMinIndex, yMaxIndex);
+
+
+  // float yMax, yMin, xMax, xMin;
+  // yMax = yMin = xMax = xMin = 0;
+  // getXCoord(&xMin, msg, detected_box.xmin, yCenter, sizeof(float));// memcpy(&xMin, &msg->data[xMinIndex], sizeof(float));
+  // getXCoord(&xMin, msg, detected_box.xmax, yCenter, sizeof(float));// memcpy(&xMax, &msg->data[xMaxIndex], sizeof(float));
+  // memcpy(&yMin, &msg->data[yMinIndex], sizeof(float));
+  // memcpy(&yMax, &msg->data[yMaxIndex], sizeof(float));
+
+  // ROS_INFO("xMin: %f\txMax: %f\nyMin: %f\tyMax%f\n", xMin, xMax, yMin, yMax);
+
+  // thisObject.height = yMax - yMin;
+  // ROS_INFO("Real world ymin and ymax: %f - %f", yMin, yMax);
+  // thisObject.width = xMax - xMin;
+  //ROS_INFO("Real world xmin and xmax: %f - %f", xMin, xMax);
 
   //ROS_INFO("xCenter (pixel): %d | yCenter (pixel): %d", xCenter, yCenter);
   int pointIndex, xIndex, yIndex, zIndex; // indeces of x, y, and z coordinates
-  pointIndex = yCenter * msg->row_step + xCenter * msg->point_step;
-  xIndex = pointIndex;
-  yIndex = pointIndex + msg->fields[1].offset; 
-  // zIndex = pointIndex + msg.fields[2].offset; // dont need because we're using the depth image directly
+  // pointIndex = yCenter * msg->row_step + xCenter * msg->point_step;
+  // xIndex = pointIndex;
+  // yIndex = pointIndex + msg->fields[1].offset;
+  xIndex = getPointCloudXCoordinate(msg, xCenter, yCenter);
+  yIndex = getPointCloudYCoordinate(msg, xCenter, yCenter);
+  //ROS_INFO("Indices: xCenter: %d\tyCenter: %d\n", xIndex, yIndex);
+
+  // zIndex = pointIndex + msg.fields[2].offset; dont need because we're using the depth image directly
 
 
   //ROS_INFO("height: %d", msg.height);
@@ -132,6 +161,7 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
   memcpy(&x, &msg->data[xIndex], sizeof(float));
   memcpy(&y, &msg->data[yIndex], sizeof(float));
   //memcpy(&z, &msg.data[zIndex], sizeof(float));
+  //ROS_INFO("Real World: xCenter: %f\tyCenter: %f\n", x, y);
 
   geometry_msgs::Point objectLocation;
 
@@ -175,6 +205,35 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
 
   return;
 } 
+
+void FoundObject::getDimensions (const sensor_msgs::PointCloud2ConstPtr& msg) {
+  // long yMaxIndex = getPointCloudYCoordinate(msg, xCenter, detected_box.ymax);
+  // long yMinIndex = getPointCloudYCoordinate(msg, xCenter, detected_box.ymin);
+  // long xMaxIndex = getPointCloudXCoordinate(msg, detected_box.xmax, yCenter);
+  // long xMinIndex = getPointCloudXCoordinate(msg, detected_box.xmin, yCenter);
+
+  // float yMax, yMin, xMax, xMin;
+  // memcpy(&xMin, &msg->data[xMinIndex], sizeof(float));
+  // memcpy(&xMax, &msg->data[xMaxIndex], sizeof(float));
+  // memcpy(&yMin, &msg->data[yMinIndex], sizeof(float));
+  // memcpy(&yMax, &msg->data[yMaxIndex], sizeof(float));
+
+  // ROS_INFO("xMin: %d\nxMax: %d\n", xMin, xMax);
+
+  // thisObject.height = yMax - yMin;
+  // //ROS_INFO("Real world ymin and ymax: %f - %f", yMin, yMax);
+  // thisObject.width = xMax - xMin;
+  // //ROS_INFO("Real world xmin and xmax: %f - %f", xMin, xMax);
+
+}
+
+int FoundObject::getPointCloudXCoordinate (const sensor_msgs::PointCloud2ConstPtr& msg, int x, int y) {
+  return y * msg->row_step + x * msg->point_step + msg->fields[0].offset;
+}
+
+int FoundObject::getPointCloudYCoordinate (const sensor_msgs::PointCloud2ConstPtr& msg, int x, int y) {
+  return y * msg->row_step + x * msg->point_step + msg->fields[1].offset;
+}
 
 
 
