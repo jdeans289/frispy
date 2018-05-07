@@ -6,7 +6,7 @@ mapper::mapper(TFBroadcastPR &br) : _broadcaster(br), _foundObjects() {}
 void mapper::storeObject(const frispy::object &object) {
 	 std::vector<geometry_msgs::Pose> newList();
 	 newList.push_back(object.location);
-	_foundObjects.insert({object.Class, newList);
+	_foundObjects.insert(object.Class, newList);
 }
 
 void mapper::broadcastAllObjects() {
