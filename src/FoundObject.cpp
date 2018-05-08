@@ -14,15 +14,8 @@ void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& 
 
   // operate on each bounding box received from yolo, if the probability is high enough
   for (int i = 0; i < msg->bounding_boxes.size(); i++) {
-<<<<<<< HEAD
-    //ROS_INFO("item name: %s", msg->bounding_boxes[i].Class);
-    // if it's a cup
-    if (msg->bounding_boxes[i].Class == "person" || msg->bounding_boxes[i].Class == "bottle" || msg->bounding_boxes[i].Class == "cup") {
-      ROS_INFO("Found the bottle!");
-=======
     if (msg->bounding_boxes[i].probability > 0.5) {
       
->>>>>>> c452984dc9c0f9c18d223c0d4edc295366f0cccf
       detected_box = msg->bounding_boxes[i];
 
       // process away!
@@ -62,17 +55,6 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
       return;
     }
 
-<<<<<<< HEAD
-    //ROS_INFO("Rows: %d", cv_ptr->image.rows);
-    //ROS_INFO("Cols: %d", cv_ptr->image.cols);
-    // int rows = cv_ptr->image.rows;
-    // int cols = cv_ptr->image.cols;
-    if (detected_box.Class != "person" && detected_box.Class != "vase" && detected_box.Class != "cup")
-        return;
-
-
-=======
->>>>>>> c452984dc9c0f9c18d223c0d4edc295366f0cccf
     // get center of box
     xCenter = (detected_box.xmin + detected_box.xmax) / 2;
     yCenter = (detected_box.ymin + detected_box.ymax) / 2;
@@ -245,8 +227,6 @@ void FoundObject::buildCube() {
 
 	return;
 }
-<<<<<<< HEAD
-=======
+
 
 */ 
->>>>>>> c452984dc9c0f9c18d223c0d4edc295366f0cccf
