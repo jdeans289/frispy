@@ -9,6 +9,8 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
+#include <string>
+#include <frispy/object.h>
 
 class FoundObject {
 private:
@@ -17,18 +19,24 @@ private:
 	darknet_ros_msgs::BoundingBox detected_box;
 	geometry_msgs::PointStamped finalLocation;
 
-
-
 public:
-	FoundObject(const int &xC, const int &yC, const float &zC);
+	FoundObject(const int &xC, const int &yC, const float &zC, ros::Publisher &pub);
 
-	void getBox(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg);
+	void processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg);
 
 	void getDepth(const sensor_msgs::ImageConstPtr& msg);
 
-	void getLocation(const sensor_msgs::PointCloud2& msg);
+	void getLocation(const sensor_msgs::PointCloud2ConstPtr& msg);
 
-	void buildCube();
+	//void getDimensions(const sensor_msgs::PointCloud2ConstPtr& msg);
 
-	visualization_msgs::Marker marker;
+	//void buildCube();
+
+	int getPointCloudXCoordinate(const sensor_msgs::PointCloud2ConstPtr& msg, int x, int y);
+
+	int getPointCloudYCoordinate(const sensor_msgs::PointCloud2ConstPtr& msg, int x, int y);
+
+	frispy::object thisObject;
+
+	ros::Publisher object_pub;
 };
