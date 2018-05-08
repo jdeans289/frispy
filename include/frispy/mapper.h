@@ -16,6 +16,7 @@ private:
 	std::unordered_map<std::string, std::vector<geometry_msgs::Pose>> _foundObjects;
 	float distanceBetween(geometry_msgs::Point p1, geometry_msgs::Point p2);
 	int _marker_color;
+	int _object_number;
 
 public:
 	mapper(ros::Publisher &opub, ros::Publisher &mpub);

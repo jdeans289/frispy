@@ -14,7 +14,7 @@ void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& 
 
   // operate on each bounding box received from yolo, if the probability is high enough
   for (int i = 0; i < msg->bounding_boxes.size(); i++) {
-    if (msg->bounding_boxes[i].probability > 0.5) {
+    if (msg->bounding_boxes[i].probability > 0.35) {
       
       detected_box = msg->bounding_boxes[i];
 
@@ -128,7 +128,7 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
     listener.transformPoint("/odom", ogLocation, finalLocation);
   } catch (tf::TransformException ex) {}
 
-  ROS_INFO("ogLocation XYZ: %lf, %lf, %lf", ogLocation.point.x, ogLocation.point.y, ogLocation.point.z);
+  //ROS_INFO("ogLocation XYZ: %lf, %lf, %lf", ogLocation.point.x, ogLocation.point.y, ogLocation.point.z);
 
   return;
 } 

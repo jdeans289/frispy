@@ -1,6 +1,6 @@
 #include "frispy/mapper.h"
 
-mapper::mapper(ros::Publisher &opub, ros::Publisher &mpub) : _object_pub(opub), _marker_pub(mpub), _foundObjects(), _marker_color(1) {}
+mapper::mapper(ros::Publisher &opub, ros::Publisher &mpub) : _object_pub(opub), _marker_pub(mpub), _foundObjects(), _marker_color(1), _object_number(0) {}
 
 float mapper::distanceBetween(geometry_msgs::Point p1, geometry_msgs::Point p2) {
 	auto diffX = p2.x - p1.x;
@@ -70,7 +70,9 @@ void mapper::buildMarker(const frispy::object &thisObject) {
 
 	// Set the namespace and id for this marker.  This serves to create a unique ID
 	// Any marker sent with the same namespace and id will overwrite the old one
-	marker.ns = thisObject.Class;
+	marker.ns = std::to_string(_object_number);
+	_object_number++;
+
 	//marker.id = 0;
 	marker.type = visualization_msgs::Marker::CUBE;
 	marker.action = visualization_msgs::Marker::ADD;
@@ -87,17 +89,17 @@ void mapper::buildMarker(const frispy::object &thisObject) {
  	marker.color.b = 0.0f;
 
  	// Uncomment next section for disco lights!!!!!!
- 	// marker.color.b = 1.0f;
- 	// marker.color.g = 0.0f;
- 	// switch (_marker_color % 3) {
- 	// 	case 0: marker.color.r = 1.0f;
- 	// 			break;
- 	// 	case 1: marker.color.g = 1.0f;
- 	// 			break;
- 	// 	case 2: marker.color.b = 1.0f;
- 	// 			break;
- 	// }
- 	// _marker_color++;
+ 	 //marker.color.b = 1.0f;
+ 	 //marker.color.g = 0.0f;
+ 	 //switch (_marker_color % 3) {
+ 	 //	case 0: marker.color.r = 1.0f;
+ 	 //			break;
+ 	 //	case 1: marker.color.g = 1.0f;
+ 	 //			break;
+ 	 //	case 2: marker.color.b = 1.0f;
+ 	 //			break;
+ 	 //}
+ 	 //_marker_color++;
 
  	marker.color.a = 1.0;
 
