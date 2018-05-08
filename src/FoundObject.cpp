@@ -22,7 +22,6 @@ void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& 
       getDepth(depthImageMsg);
       getLocation(pointCloudMsg);
       //getDimensions(pointCloudMsg);
-      //buildCube();
 
       // populate our custom object with detectedObject class and location.
       thisObject.Class = detected_box.Class;
@@ -32,8 +31,11 @@ void FoundObject::processBoxes(const darknet_ros_msgs::BoundingBoxes::ConstPtr& 
       thisObject.width = 0.1;
 
       // as long as we don't have nan values, send it off!
-      if (!std::isnan(thisObject.location.pose.position.x))
+      if (!std::isnan(thisObject.location.pose.position.x)) {
+        ROS_INFO("Detected %s at %f %f %f", thisObject.Class.c_str(), thisObject.location.pose.position.x, 
+          thisObject.location.pose.position.y, thisObject.location.pose.position.z);
         object_pub.publish(thisObject);
+      }
     }
   }
 

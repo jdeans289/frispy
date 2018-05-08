@@ -1,6 +1,6 @@
 #include "frispy/mapper.h"
 
-mapper::mapper(ros::Publisher &opub, ros::Publisher &mpub) : _object_pub(opub), _marker_pub(mpub), _foundObjects() {}
+mapper::mapper(ros::Publisher &opub, ros::Publisher &mpub) : _object_pub(opub), _marker_pub(mpub), _foundObjects(), _marker_color(1) {}
 
 float mapper::distanceBetween(geometry_msgs::Point p1, geometry_msgs::Point p2) {
 	auto diffX = p2.x - p1.x;
@@ -39,6 +39,7 @@ void mapper::broadcastAllObjects() {
 			thisObject.location.pose = location;
 			thisObject.Class = object.first;
 			_object_pub.publish(thisObject);
+			buildMarker(thisObject);
 			//_broadcaster.receivePose(location);
 		}
 	}
@@ -53,6 +54,7 @@ void mapper::broadcastSelectedObjects(std::vector<std::string> &objects) {
 				thisObject.location.pose = location;
 				thisObject.Class = match->first;
 				_object_pub.publish(thisObject);
+				buildMarker(thisObject);
 			}
 		}
 		else {
@@ -61,6 +63,62 @@ void mapper::broadcastSelectedObjects(std::vector<std::string> &objects) {
 	}
 }
 
+void mapper::buildMarker(const frispy::object &thisObject) {
+	visualization_msgs::Marker marker;
+	marker.header.frame_id = "/odom";
+	marker.header.stamp = ros::Time();
+
+	// Set the namespace and id for this marker.  This serves to create a unique ID
+	// Any marker sent with the same namespace and id will overwrite the old one
+	marker.ns = thisObject.Class;
+	//marker.id = 0;
+	marker.type = visualization_msgs::Marker::CUBE;
+	marker.action = visualization_msgs::Marker::ADD;
+
+
+  	// set scale
+  	marker.scale.x = 0.1;
+  	marker.scale.y = 0.1;
+  	marker.scale.z = 0.1;
+
+ 	// set color
+ 	marker.color.r = 0.0f;
+ 	marker.color.g = 0.0f;
+ 	marker.color.b = 0.0f;
+ 	switch (_marker_color % 3) {
+ 		case 0: marker.color.r = 1.0f;
+ 				break;
+ 		case 1: marker.color.g = 1.0f;
+ 				break;
+ 		case 2: marker.color.b = 1.0f;
+ 				break;
+ 	}
+ 	_marker_color++;
+
+ 	marker.color.a = 1.0;
+
+	// TFBroadcastPR broadcaster("odom","camera_rgb_optical_frame");
+	// mapperPR mapper(broadcaster);
+
+ 	marker.pose = thisObject.location.pose;
+ 	marker.lifetime = ros::Duration();
+ 	_marker_pub.publish(marker);
+
+	//geometry_msgs::Pose finalPose;
+
+ //  ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
+
+
+ //  // put the calculated point into the pose
+ //  finalPose.position = finalLocation.point;
+
+	// finalPose.orientation.x = 0;
+	// finalPose.orientation.y = 0;
+	// finalPose.orientation.z = 0;
+	// finalPose.orientation.w = 1;
+  
+
+}
 
 /*
 //Recieves pose and object class string

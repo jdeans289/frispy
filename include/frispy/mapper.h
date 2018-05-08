@@ -15,6 +15,7 @@ private:
 	ros::Publisher _marker_pub;
 	std::unordered_map<std::string, std::vector<geometry_msgs::Pose>> _foundObjects;
 	float distanceBetween(geometry_msgs::Point p1, geometry_msgs::Point p2);
+	int _marker_color;
 
 public:
 	mapper(ros::Publisher &opub, ros::Publisher &mpub);
@@ -24,5 +25,7 @@ public:
 	void broadcastAllObjects();
 
 	void broadcastSelectedObjects(std::vector<std::string> &objects);
+
+	void buildMarker(const frispy::object &object);
 	
 };
