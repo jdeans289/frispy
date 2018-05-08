@@ -12,7 +12,7 @@ void FoundObject::getBox(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
   for (int i = 0; i < msg->bounding_boxes.size(); i++) {
     //ROS_INFO("item name: %s", msg->bounding_boxes[i].Class);
     // if it's a cup
-    if (msg->bounding_boxes[i].Class == "bottle") {
+    if (msg->bounding_boxes[i].Class == "person" || msg->bounding_boxes[i].Class == "bottle" || msg->bounding_boxes[i].Class == "cup") {
       ROS_INFO("Found the bottle!");
       detected_box = msg->bounding_boxes[i];
 
@@ -41,7 +41,7 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     //ROS_INFO("Cols: %d", cv_ptr->image.cols);
     // int rows = cv_ptr->image.rows;
     // int cols = cv_ptr->image.cols;
-    if (detected_box.Class != "bottle")
+    if (detected_box.Class != "person" && detected_box.Class != "vase" && detected_box.Class != "cup")
         return;
 
 
@@ -172,7 +172,7 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
     // works until here
   } catch (tf::TransformException ex) {}
 
-  //ROS_INFO("ogLocation XYZ: %lf, %lf, %lf", ogLocation.point.x, ogLocation.point.y, ogLocation.point.z);
+  ROS_INFO("ogLocation XYZ: %lf, %lf, %lf", ogLocation.point.x, ogLocation.point.y, ogLocation.point.z);
 
   // the current problem is that the transformed coordinates (relative to odom) are all 0!!! How to fix???
 
