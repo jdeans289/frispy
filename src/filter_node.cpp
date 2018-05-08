@@ -13,13 +13,12 @@ int main(int argc, char** argv) {
     ros::Publisher marker_pub = node.advertise<visualization_msgs::Marker>("visualized_objects", 1);
     mapper m(object_pub, marker_pub);
     ros::Subscriber map_reader = node.subscribe("all_detected_objects", 100, &mapper::storeObject, &m);
-    
 
     while (ros::ok()) {
 
-        ros::spinOnce();  
+        ros::spinOnce();
 
-        m.broadcastSelectedObjects(filter);
+        m.broadcastAllObjects();
 
         r.sleep();
 
