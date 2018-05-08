@@ -83,17 +83,21 @@ void mapper::buildMarker(const frispy::object &thisObject) {
 
  	// set color
  	marker.color.r = 0.0f;
- 	marker.color.g = 0.0f;
+ 	marker.color.g = 1.0f;
  	marker.color.b = 0.0f;
- 	switch (_marker_color % 3) {
- 		case 0: marker.color.r = 1.0f;
- 				break;
- 		case 1: marker.color.g = 1.0f;
- 				break;
- 		case 2: marker.color.b = 1.0f;
- 				break;
- 	}
- 	_marker_color++;
+
+ 	// Uncomment next section for disco lights!!!!!!
+ 	// marker.color.b = 1.0f;
+ 	// marker.color.g = 0.0f;
+ 	// switch (_marker_color % 3) {
+ 	// 	case 0: marker.color.r = 1.0f;
+ 	// 			break;
+ 	// 	case 1: marker.color.g = 1.0f;
+ 	// 			break;
+ 	// 	case 2: marker.color.b = 1.0f;
+ 	// 			break;
+ 	// }
+ 	// _marker_color++;
 
  	marker.color.a = 1.0;
 
