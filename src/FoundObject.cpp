@@ -16,10 +16,10 @@ FoundObject::FoundObject(const int &xC, const int &yC, const float &zC) : xCente
 void FoundObject::getBox(const darknet_ros_msgs::BoundingBoxes::ConstPtr& msg){
 
   for (int i = 0; i < msg->bounding_boxes.size(); i++) {
-    //ROS_INFO("item name: %s", msg->bounding_boxes[i].Class);
+    ROS_INFO("item name: %s", msg->bounding_boxes[i].Class.c_str());
     // if it's a cup
-    if (msg->bounding_boxes[i].Class == "bottle") {
-      ROS_INFO("Found the bottle!");
+    if (msg->bounding_boxes[i].Class == "chair") {
+      ROS_INFO("Found the chair!");
       detected_box = msg->bounding_boxes[i];
 
       break;
@@ -47,11 +47,13 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     //ROS_INFO("Cols: %d", cv_ptr->image.cols);
     // int rows = cv_ptr->image.rows;
     // int cols = cv_ptr->image.cols;
-    if (detected_box.Class != "bottle")
+    if (detected_box.Class != "chair" || count > 60) {
+	//ROS_INFO("not chair or maxed out... returning...");
         return;
+    }
 
     count++;
-    ROS_INFO("\n\nDetection %d:", count);
+    ROS_INFO("\n\n Call to GetDepth # %d:", count);
   
 
     // get center of box
@@ -65,7 +67,7 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     // *** CENTER DEPTH APPROACH ***
     currDepth = cv_ptr->image.at<float>(cv::Point(xCenter,yCenter));
     centerDepthSum += currDepth;
-    // ROS_INFO("single-run: center approach: %f", currDepth);
+    //ROS_INFO("single-run: center approach: %f", currDepth);
     
     
 
@@ -77,7 +79,7 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
      for (int y = detected_box.ymin; y < detected_box.ymax; y++) {
           currDepth = cv_ptr->image.at<float>(cv::Point(x,y));
           if (std::isfinite(currDepth)) {
-            // ROS_INFO("Depth at single point: %f", currDepth);
+            //ROS_INFO("Depth at single point: %f", currDepth);
             depthSum += currDepth;
             numValidPoints++;
         }
@@ -85,14 +87,12 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
     }
     avgDepth = depthSum / numValidPoints;
     avgDepthSum += avgDepth;
-    // ROS_INFO("single run: average approach: %f", avgDepth);
+    //ROS_INFO("single run: average approach: %f", avgDepth);
     
 
 
 
-    ROS_INFO("inter-run avg: center approach: %f", (centerDepthSum/(float)count));
-    ROS_INFO("inter-run avg: average approach: %f", (avgDepthSum/(float)count));
-
+   
 
     // *** FRACTIONAL RECTANGLE APPROACH ***
     //const float THRESH = .3;      // difference threshold
@@ -117,7 +117,7 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
 
           // ignore nans and infinities
           if (std::isfinite(currDepth)) {
-            //ROS_INFO("finite depth: %f", depth);
+            //ROS_INFO("finite depth: %f", currDepth);
             depthSum += currDepth;
             numValidPoints++;
           }
@@ -127,9 +127,15 @@ void FoundObject::getDepth(const sensor_msgs::ImageConstPtr& msg) {
       miniboxDepthSum[ix] += zDepth;
       //ROS_INFO("single-run: minibox approach, frac %f: %f", FRACTION, zDepth);
 
-      ROS_INFO("inter-run avg: minibox approach, frac %f: %f", FRACTION, miniboxDepthSum[ix]/(float)count);
+
+ 	
+      	ROS_INFO("inter-run avg: minibox approach, frac %f: %f", FRACTION, miniboxDepthSum[ix]/(float)count);
 
     }
+
+	ROS_INFO("inter-run avg: center approach: %f", (centerDepthSum/(float)count));
+    	ROS_INFO("inter-run avg: average approach: %f", (avgDepthSum/(float)count));
+
 
     // *** PRINT AVERAGE METRICS ***
     
@@ -220,7 +226,7 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2& msg) {
   // the current problem is that the transformed coordinates (relative to odom) are all 0!!! How to fix???
 
 
-  buildCube();
+  //buildCube();
 } 
 
 
@@ -262,7 +268,7 @@ void FoundObject::buildCube() {
   // hardPoint.y = 1.0;
   // hardPoint.z = 1.0;
 
-  ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
+  //ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
 
 
   // put the calculated point into the pose
