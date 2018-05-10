@@ -88,55 +88,10 @@ void mapper::buildMarker(const frispy::object &thisObject) {
  	marker.color.g = 1.0f;
  	marker.color.b = 0.0f;
 
- 	// Uncomment next section for disco lights!!!!!!
- 	 //marker.color.b = 1.0f;
- 	 //marker.color.g = 0.0f;
- 	 //switch (_marker_color % 3) {
- 	 //	case 0: marker.color.r = 1.0f;
- 	 //			break;
- 	 //	case 1: marker.color.g = 1.0f;
- 	 //			break;
- 	 //	case 2: marker.color.b = 1.0f;
- 	 //			break;
- 	 //}
- 	 //_marker_color++;
-
  	marker.color.a = 1.0;
 
-	// TFBroadcastPR broadcaster("odom","camera_rgb_optical_frame");
-	// mapperPR mapper(broadcaster);
 
  	marker.pose = thisObject.location.pose;
  	marker.lifetime = ros::Duration();
  	_marker_pub.publish(marker);
-
-	//geometry_msgs::Pose finalPose;
-
- //  ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
-
-
- //  // put the calculated point into the pose
- //  finalPose.position = finalLocation.point;
-
-	// finalPose.orientation.x = 0;
-	// finalPose.orientation.y = 0;
-	// finalPose.orientation.z = 0;
-	// finalPose.orientation.w = 1;
-  
-
 }
-
-/*
-//Recieves pose and object class string
-void mapper::receivePose(geometry_msgs::Pose &pose) {
-	addObject(pose);
-}
-
-void mapper::addObjects(geometry_msgs::Pose &pose){
-	for(auto object : _foundObjects){
-
-	}
-}
-
-void mapper:broadcastObject()
-*/

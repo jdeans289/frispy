@@ -14,10 +14,10 @@
 
 class FoundObject {
 private:
-	int xCenter, yCenter;
-	float zDepth;
-	darknet_ros_msgs::BoundingBox detected_box;
-	geometry_msgs::PointStamped finalLocation;
+	int _xCenter, _yCenter;
+	float _zDepth;
+	darknet_ros_msgs::BoundingBox _detectedBox;
+	geometry_msgs::PointStamped _finalLocation;
 
 public:
 	FoundObject(const int &xC, const int &yC, const float &zC, ros::Publisher &pub);

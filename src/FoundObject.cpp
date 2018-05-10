@@ -106,7 +106,7 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
 
   memcpy(&x, &msg->data[xIndex], sizeof(float));
   memcpy(&y, &msg->data[yIndex], sizeof(float));
-  //ROS_INFO("Real World: xCenter: %f\tyCenter: %f\n", x, y);
+  //ROS_INFO("Real World: _xCenter: %f\tyCenter: %f\n", x, y);
 
   geometry_msgs::Point objectLocation;
 
@@ -128,8 +128,6 @@ void FoundObject::getLocation(const sensor_msgs::PointCloud2ConstPtr& msg) {
     listener.transformPoint("/odom", ogLocation, finalLocation);
   } catch (tf::TransformException ex) {}
 
-  //ROS_INFO("ogLocation XYZ: %lf, %lf, %lf", ogLocation.point.x, ogLocation.point.y, ogLocation.point.z);
-
   return;
 } 
 
@@ -148,18 +146,18 @@ int FoundObject::getPointCloudYCoordinate (const sensor_msgs::PointCloud2ConstPt
 
 /* 
 void FoundObject::getDimensions (const sensor_msgs::PointCloud2ConstPtr& msg) {
-  ROS_INFO("Yolo bounding boxes\nXmin: %d\tXmax:%d\nYmin: %d\tYmax:%d\n", detected_box.xmin, detected_box.xmax, detected_box.ymin, detected_box.ymax);
-  int yMaxIndex = getPointCloudYCoordinate(msg, xCenter, detected_box.ymax);
-  int yMinIndex = getPointCloudYCoordinate(msg, xCenter, detected_box.ymin);
-  int xMaxIndex = getPointCloudXCoordinate(msg, detected_box.xmax, yCenter);
-  int xMinIndex = getPointCloudXCoordinate(msg, detected_box.xmin, yCenter);
+  ROS_INFO("Yolo bounding boxes\nXmin: %d\tXmax:%d\nYmin: %d\tYmax:%d\n", _detectedBox.xmin, _detectedBox.xmax, _detectedBox.ymin, _detectedBox.ymax);
+  int yMaxIndex = getPointCloudYCoordinate(msg, _xCenter, _detectedBox.ymax);
+  int yMinIndex = getPointCloudYCoordinate(msg, _xCenter, _detectedBox.ymin);
+  int xMaxIndex = getPointCloudXCoordinate(msg, _detectedBox.xmax, _yCenter);
+  int xMinIndex = getPointCloudXCoordinate(msg, _detectedBox.xmin, _yCenter);
   ROS_INFO("Point Cloud boundaries boxes\nXmin: %d\tXmax:%d\nYmin: %d\tYmax:%d\n", xMinIndex, xMaxIndex, yMinIndex, yMaxIndex);
 
 
   float yMax, yMin, xMax, xMin;
   yMax = yMin = xMax = xMin = 0;
-  getXCoord(&xMin, msg, detected_box.xmin, yCenter, sizeof(float));// memcpy(&xMin, &msg->data[xMinIndex], sizeof(float));
-  getXCoord(&xMin, msg, detected_box.xmax, yCenter, sizeof(float));// memcpy(&xMax, &msg->data[xMaxIndex], sizeof(float));
+  getXCoord(&xMin, msg, _detectedBox.xmin, _yCenter, sizeof(float));// memcpy(&xMin, &msg->data[xMinIndex], sizeof(float));
+  getXCoord(&xMin, msg, _detectedBox.xmax, _yCenter, sizeof(float));// memcpy(&xMax, &msg->data[xMaxIndex], sizeof(float));
   memcpy(&yMin, &msg->data[yMinIndex], sizeof(float));
   memcpy(&yMax, &msg->data[yMaxIndex], sizeof(float));
 
@@ -211,11 +209,11 @@ void FoundObject::buildCube() {
   // hardPoint.y = 1.0;
   // hardPoint.z = 1.0;
 
-  ROS_INFO("finalLocation XYZ: %lf, %lf, %lf", finalLocation.point.x, finalLocation.point.y, finalLocation.point.z);
+  ROS_INFO("_finalLocation XYZ: %lf, %lf, %lf", _finalLocation.point.x, _finalLocation.point.y, _finalLocation.point.z);
 
 
   // put the calculated point into the pose
-  finalPose.position = finalLocation.point;
+  finalPose.position = _finalLocation.point;
 
 	finalPose.orientation.x = 0;
 	finalPose.orientation.y = 0;
